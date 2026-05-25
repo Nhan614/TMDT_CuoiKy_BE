@@ -2,6 +2,7 @@ package vn.edu.hcmuaf.fit.artisanMarket.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -51,6 +52,8 @@ public class SecurityConfig {
                                 "/api/artisans",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
 
                         .anyRequest().authenticated()
                 )
