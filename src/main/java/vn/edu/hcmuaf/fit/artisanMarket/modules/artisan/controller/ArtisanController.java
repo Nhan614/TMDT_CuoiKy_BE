@@ -1,50 +1,48 @@
 package vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import vn.edu.hcmuaf.fit.artisanMarket.common.ApiResponse;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.dto.response.ArtisanCardResponse;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.dto.response.ArtisanDetailResponse;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.dto.response.ArtisanProfileResponse;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.service.ArtisanService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/artisans")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ArtisanController {
 
     private final ArtisanService artisanService;
 
-    @GetMapping
-    public ResponseEntity<List<ArtisanCardResponse>> getMarketplace(
+    @GetMapping("/api/artisans")
+    public ResponseEntity<ApiResponse<List<ArtisanCardResponse>>> getMarketplace(
             @RequestParam(required = false) String skill,
-            @RequestParam(required = false, defaultValue = "rating") String sortBy
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        List<ArtisanCardResponse> artisans = artisanService.getArtisansMarket(skill, sortBy);
-        return ResponseEntity.ok(artisans);
-    }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ArtisanCardResponse> pageResult = artisanService.getArtisansMarket(skill, sortBy, pageable);
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ArtisanDetailResponse> getArtisanDetail(@PathVariable Long id) {
-        ArtisanDetailResponse artisanDetail = artisanService.getArtisanDetail(id);
-        return ResponseEntity.ok(artisanDetail);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách nghệ nhân thành công", pageResult));
     }
-
-    @PostMapping("/{id}/orders")
-    public ResponseEntity<String> createOrder(@PathVariable Long id) {
+    @GetMapping("/api/artisans/{id}")
+    public ResponseEntity<ApiResponse<ArtisanProfileResponse>> getArtisanProfile(@PathVariable Long id) {
         try {
-            artisanService.processNewOrder(id);
-            return ResponseEntity.ok("Tiếp nhận yêu cầu đơn hàng thành công!");
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ArtisanProfileResponse profile = artisanService.getArtisanProfile(id);
+            return ResponseEntity.ok(ApiResponse.success("Lấy thông tin chi tiết nghệ nhân thành công", profile));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
         }
-    }
-
-    @PostMapping("/{id}/orders/complete")
-    public ResponseEntity<String> completeOrder(@PathVariable Long id) {
-        artisanService.processCompleteOrder(id);
-        return ResponseEntity.ok("Cập nhật hoàn thành đơn hàng!");
     }
 }
