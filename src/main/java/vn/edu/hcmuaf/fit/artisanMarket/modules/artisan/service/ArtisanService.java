@@ -1,13 +1,15 @@
 package vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.dto.response.ArtisanCardResponse;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.dto.response.ArtisanDetailResponse;
-
-import java.util.List;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.dto.response.ArtisanProfileResponse;
 
 public interface ArtisanService {
-    // Hàm mới gộp cả Filter nghiệp vụ và Sắp xếp cho Chợ nghệ nhân
-    List<ArtisanCardResponse> getArtisansMarket(String skill, String sortBy);
+
+    Page<ArtisanCardResponse> getArtisansMarket(String skill, String sortBy, Pageable pageable);
+    ArtisanProfileResponse getArtisanProfile(Long id);
 
     ArtisanDetailResponse getArtisanDetail(Long id);
     void processNewOrder(Long id);

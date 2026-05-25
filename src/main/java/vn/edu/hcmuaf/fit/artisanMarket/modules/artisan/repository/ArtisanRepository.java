@@ -1,5 +1,7 @@
 package vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,6 +15,8 @@ import java.util.Optional;
 @Repository
 public interface ArtisanRepository extends JpaRepository<Artisan, Long> {
 
+    Page<Artisan> findByStatusIn(List<ArtisanStatus> statuses, Pageable pageable);
+    Page<Artisan> findByStatusInAndSkill(List<ArtisanStatus> statuses, ArtisanSkill skill, Pageable pageable);
 
     Optional<Artisan> findByUserId(Long userId);
     List<Artisan> findByStatus(ArtisanStatus status, Sort sort);
