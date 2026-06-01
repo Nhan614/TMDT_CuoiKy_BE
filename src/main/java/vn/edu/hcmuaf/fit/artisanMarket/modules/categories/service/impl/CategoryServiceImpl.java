@@ -7,10 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.Category;
+
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.domain.repository.CategoryRepository;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.dto.CategoryRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.dto.CategoryResponseDTO;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.service.CategoryService;
 
 @Service
@@ -63,7 +64,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CategoryResponseDTO> getAllCategories(int page, int size, String search, Long parentId, Boolean isActive, String sortBy) {
+    public Page<CategoryResponseDTO> getAllCategories(int page, int size, String search, Long parentId,
+            Boolean isActive, String sortBy) {
         Sort sort = Sort.by(Sort.Direction.ASC, "id");
         if (sortBy != null) {
             switch (sortBy.toLowerCase()) {

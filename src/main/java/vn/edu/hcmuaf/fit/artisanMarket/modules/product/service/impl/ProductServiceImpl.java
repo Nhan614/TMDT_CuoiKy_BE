@@ -7,12 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.Category;
+
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.domain.repository.CategoryRepository;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.dto.ProductRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.dto.ProductResponseDTO;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.service.ProductService;
 
 @Service

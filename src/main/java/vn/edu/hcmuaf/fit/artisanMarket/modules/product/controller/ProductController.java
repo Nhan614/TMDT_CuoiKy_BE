@@ -1,4 +1,4 @@
-package vn.edu.hcmuaf.fit.artisanMarket.modules.product;
+package vn.edu.hcmuaf.fit.artisanMarket.modules.product.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
