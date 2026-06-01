@@ -1,8 +1,8 @@
-package vn.edu.hcmuaf.fit.artisanMarket.modules.product;
+package vn.edu.hcmuaf.fit.artisanMarket.modules.product.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.Category;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

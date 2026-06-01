@@ -1,7 +1,7 @@
 package vn.edu.hcmuaf.fit.artisanMarket.modules.categories.dto;
 
 import lombok.*;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.Category;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 
 @Getter
 @Setter
@@ -19,7 +19,8 @@ public class CategoryResponseDTO {
     private String parentName;
 
     public static CategoryResponseDTO fromEntity(Category category) {
-        if (category == null) return null;
+        if (category == null)
+            return null;
         return CategoryResponseDTO.builder()
                 .id(category.getId())
                 .name(category.getName())

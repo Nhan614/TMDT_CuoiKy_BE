@@ -10,8 +10,8 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.dto.AddToCartRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.dto.CartResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.dto.UpdateCartItemRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.service.CartService;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.repository.UserRepository;
 
@@ -34,7 +34,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public CartResponseDTO addToCart(String username, AddToCartRequestDTO request) {
         Cart cart = getOrCreateCart(username);
-        
+
         Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
 
@@ -59,7 +59,8 @@ public class CartServiceImpl implements CartService {
 
         // Validate stock
         if (!product.isPreOrder() && finalQty > product.getStockQuantity()) {
-            throw new RuntimeException("Số lượng sản phẩm vượt quá số lượng trong kho (" + product.getStockQuantity() + ")");
+            throw new RuntimeException(
+                    "Số lượng sản phẩm vượt quá số lượng trong kho (" + product.getStockQuantity() + ")");
         }
 
         if (existingItem != null) {
@@ -94,7 +95,8 @@ public class CartServiceImpl implements CartService {
         } else {
             Product product = existingItem.getProduct();
             if (!product.isPreOrder() && newQty > product.getStockQuantity()) {
-                throw new RuntimeException("Số lượng sản phẩm vượt quá số lượng trong kho (" + product.getStockQuantity() + ")");
+                throw new RuntimeException(
+                        "Số lượng sản phẩm vượt quá số lượng trong kho (" + product.getStockQuantity() + ")");
             }
             existingItem.setQuantity(newQty);
         }

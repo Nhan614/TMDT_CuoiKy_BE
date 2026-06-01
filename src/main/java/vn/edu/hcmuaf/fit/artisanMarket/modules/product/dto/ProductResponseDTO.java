@@ -1,8 +1,8 @@
 package vn.edu.hcmuaf.fit.artisanMarket.modules.product.dto;
 
 import lombok.*;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.Category;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

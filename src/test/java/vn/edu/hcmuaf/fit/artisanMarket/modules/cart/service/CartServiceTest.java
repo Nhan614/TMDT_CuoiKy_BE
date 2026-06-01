@@ -13,8 +13,8 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.dto.AddToCartRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.dto.CartResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.dto.UpdateCartItemRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.cart.service.impl.CartServiceImpl;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.repository.UserRepository;
 
@@ -77,8 +77,8 @@ class CartServiceTest {
         CartResponseDTO response = cartService.getCart("testuser");
 
         assertNotNull(response);
-        assertEquals(1L, response.getId());
-        assertEquals(0, response.getItems().size());
+        assertEquals(1L, response.id());
+        assertEquals(0, response.items().size());
         verify(cartRepository, times(1)).findByUserUsername("testuser");
     }
 
