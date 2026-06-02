@@ -2,7 +2,7 @@ package vn.edu.hcmuaf.fit.artisanMarket.modules.order.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 
 import java.math.BigDecimal;
 

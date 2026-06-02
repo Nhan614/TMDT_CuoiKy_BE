@@ -17,7 +17,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.order.domain.repository.OrderRepo
 import vn.edu.hcmuaf.fit.artisanMarket.modules.order.dto.request.CreateOrderRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.order.dto.response.OrderResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.order.service.OrderService;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.enums.UserRole;
