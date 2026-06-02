@@ -13,7 +13,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.order.domain.repository.OrderRepo
 import vn.edu.hcmuaf.fit.artisanMarket.modules.payment.config.VNPayConfig;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.payment.dto.VNPayCreatePaymentDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.payment.service.PaymentService;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.product.Product;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
 
 import javax.crypto.Mac;
