@@ -1,4 +1,4 @@
-package vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.application.service;
+package vn.edu.hcmuaf.fit.artisanMarket.infrastructure.cloudinary;
 
 import org.springframework.web.multipart.MultipartFile;
 
