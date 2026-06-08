@@ -14,7 +14,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.application.domain.reposi
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.application.dto.request.SubmitApplicationRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.application.dto.response.ArtisanApplicationResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.application.service.ArtisanApplicationService;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.application.service.CloudinaryService;
+import vn.edu.hcmuaf.fit.artisanMarket.infrastructure.cloudinary.CloudinaryService;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.model.Artisan;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.model.enums.ArtisanStatus;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.repository.ArtisanRepository;

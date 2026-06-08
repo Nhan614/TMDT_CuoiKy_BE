@@ -65,6 +65,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/artisan-applications/**").authenticated()
                         .requestMatchers("/api/admin/artisan-applications/**").hasRole("ADMIN")
 
+                        // Custom Orders
+                        .requestMatchers(HttpMethod.POST, "/api/custom-orders/upload-reference").hasAnyRole("USER", "ARTISAN")
+                        .requestMatchers(HttpMethod.POST, "/api/custom-orders").hasRole("USER")
+                        .requestMatchers("/api/custom-orders/my/**").hasRole("USER")
+                        .requestMatchers("/api/custom-orders/artisan/**").hasRole("ARTISAN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
