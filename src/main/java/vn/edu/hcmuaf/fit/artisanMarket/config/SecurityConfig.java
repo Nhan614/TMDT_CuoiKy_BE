@@ -60,6 +60,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/comments/my").authenticated()
 
+                        // Artisan Applications
+                        .requestMatchers(HttpMethod.POST, "/api/artisan-applications/upload-proof").authenticated()
+                        .requestMatchers("/api/artisan-applications/**").authenticated()
+                        .requestMatchers("/api/admin/artisan-applications/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
