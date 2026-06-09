@@ -51,7 +51,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/api/artisans/**",
                                 "/swagger-ui.html",
-                                "/api/payment/vnpay/callback"
+                                "/api/payment/vnpay/callback",
+                                "/error"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
