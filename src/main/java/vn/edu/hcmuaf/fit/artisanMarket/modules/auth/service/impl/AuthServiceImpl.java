@@ -49,12 +49,18 @@ public class AuthServiceImpl implements AuthService {
         // get user details
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getUsername());
 
-        // create token
-        String token = jwtService.generateToken(userDetails);
+        // get user role
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        String role = user.getRole().name();
+
+        // create token with role claim
+        String token = jwtService.generateToken(userDetails, role);
 
         return LoginResponseDTO.builder()
                 .username(userDetails.getUsername())
                 .token(token)
+                .role(role)
                 .build();
     }
 
@@ -110,14 +116,16 @@ public class AuthServiceImpl implements AuthService {
                                 .build());
                 userRepository.save(user);
 
-                // Generate JWT
+                // Generate JWT with role claim
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-                String token = jwtService.generateToken(userDetails);
+                String role = user.getRole().name();
+                String token = jwtService.generateToken(userDetails, role);
 
                 // Response
                 return LoginResponseDTO.builder()
                         .username(user.getUsername())
                         .token(token)
+                        .role(role)
                         .build();
             } else {
                 throw new RuntimeException("Token Google không hợp lệ");

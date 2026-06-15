@@ -57,27 +57,33 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*/comments").permitAll()
+
+                        // Comments
                         .requestMatchers(HttpMethod.POST, "/api/products/*/comments").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/comments/my").authenticated()
 
-                        // User profile
+                        // User profile — any authenticated user
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/users/me").authenticated()
 
-                        // Admin user management
-                        .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                        // Admin — chỉ ADMIN
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Artisan Applications
                         .requestMatchers(HttpMethod.POST, "/api/artisan-applications/upload-proof").authenticated()
                         .requestMatchers("/api/artisan-applications/**").authenticated()
-                        .requestMatchers("/api/admin/artisan-applications/**").hasRole("ADMIN")
 
-                        // Custom Orders
+                        // Custom Orders — phân quyền theo role
                         .requestMatchers(HttpMethod.POST, "/api/custom-orders/upload-reference").hasAnyRole("USER", "ARTISAN")
                         .requestMatchers(HttpMethod.POST, "/api/custom-orders").hasRole("USER")
                         .requestMatchers("/api/custom-orders/my/**").hasRole("USER")
                         .requestMatchers("/api/custom-orders/artisan/**").hasRole("ARTISAN")
+
+                        // Orders, Cart, Payment — USER, ARTISAN, ADMIN
+                        .requestMatchers("/api/orders/**").hasAnyRole("USER", "ARTISAN", "ADMIN")
+                        .requestMatchers("/api/cart/**").hasAnyRole("USER", "ARTISAN", "ADMIN")
+                        .requestMatchers("/api/payment/**").hasAnyRole("USER", "ARTISAN", "ADMIN")
 
                         .anyRequest().authenticated()
                 )
