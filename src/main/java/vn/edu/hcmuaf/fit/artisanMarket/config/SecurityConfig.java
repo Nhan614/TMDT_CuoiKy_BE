@@ -61,6 +61,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/comments/my").authenticated()
 
+                        // User profile
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/me").authenticated()
+
+                        // Admin user management
+                        .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+
                         // Artisan Applications
                         .requestMatchers(HttpMethod.POST, "/api/artisan-applications/upload-proof").authenticated()
                         .requestMatchers("/api/artisan-applications/**").authenticated()
