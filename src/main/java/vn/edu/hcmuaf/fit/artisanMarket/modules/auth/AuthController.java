@@ -2,15 +2,9 @@ package vn.edu.hcmuaf.fit.artisanMarket.modules.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.artisanMarket.common.ApiResponse;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.GoogleAuthRequestDTO;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.LoginRequestDTO;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.LoginResponseDTO;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.RegisterRequestDTO;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.*;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.service.AuthService;
 
 @RestController
@@ -40,5 +34,23 @@ public class AuthController {
                 "Đăng nhập thành công",
                 authService.googleLogin(request)
         ));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Yêu cầu đặt lại mật khẩu đã được gửi đến email của bạn"));
+    }
+
+    @GetMapping("/verify-reset-token")
+    public ResponseEntity<ApiResponse<Void>> verifyResetToken(@RequestParam String token) {
+        authService.verifyResetToken(token);
+        return ResponseEntity.ok(ApiResponse.success("Mã xác thực hợp lệ"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công"));
     }
 }

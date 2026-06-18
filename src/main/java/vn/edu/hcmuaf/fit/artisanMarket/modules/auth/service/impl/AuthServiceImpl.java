@@ -11,10 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.GoogleAuthRequestDTO;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.LoginRequestDTO;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.LoginResponseDTO;
-import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.RegisterRequestDTO;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.dto.*;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.enums.UserRole;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.enums.UserStatus;
@@ -22,7 +19,9 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.domain.repository.AuthReposi
 import vn.edu.hcmuaf.fit.artisanMarket.security.CustomUserDetailsService;
 import vn.edu.hcmuaf.fit.artisanMarket.security.JwtService;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.service.AuthService;
+import vn.edu.hcmuaf.fit.artisanMarket.infrastructure.mail.EmailService;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -33,11 +32,15 @@ public class AuthServiceImpl implements AuthService {
     @Value("${google.client.id}")
     private String googleClientId;
 
+    @Value("${app.reset-password-url}")
+    private String resetPasswordUrl;
+
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtService jwtService;
     private final AuthRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO request) {
@@ -133,5 +136,45 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             throw new RuntimeException("Lỗi xác thực Google");
         }
+    }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequestDTO request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống"));
+
+        String token = UUID.randomUUID().toString();
+        user.setResetPasswordToken(token);
+        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
+
+        String resetLink = resetPasswordUrl + "?token=" + token;
+        emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
+    }
+
+    @Override
+    public void verifyResetToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new RuntimeException("Mã xác thực không hợp lệ");
+        }
+        User user = userRepository.findByResetPasswordToken(token)
+                .orElseThrow(() -> new RuntimeException("Mã xác thực không hợp lệ hoặc đã hết hạn"));
+
+        if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Mã xác thực đã hết hạn");
+        }
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequestDTO request) {
+        verifyResetToken(request.getToken());
+
+        User user = userRepository.findByResetPasswordToken(request.getToken())
+                .orElseThrow(() -> new RuntimeException("Mã xác thực không hợp lệ"));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetPasswordToken(null);
+        user.setResetPasswordTokenExpiry(null);
+        userRepository.save(user);
     }
 }
