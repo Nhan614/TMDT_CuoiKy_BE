@@ -3,6 +3,7 @@ package vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.model.Artisan;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity.enums.CustomOrderPaymentStatus;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity.enums.CustomOrderStatus;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
 
@@ -59,6 +60,17 @@ public class CustomOrder {
     @Column(name = "quoted_price", precision = 12, scale = 2)
     private BigDecimal quotedPrice;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", length = 20)
+    @Builder.Default
+    private CustomOrderPaymentStatus paymentStatus = CustomOrderPaymentStatus.UNPAID;
+
+    @Column(name = "payment_transaction_id", length = 100)
+    private String paymentTransactionId;
+
+    @Column(name = "payment_at")
+    private LocalDateTime paymentAt;
+
     @OneToMany(mappedBy = "customOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<CustomOrderReferenceImage> referenceImages = new ArrayList<>();
@@ -78,6 +90,9 @@ public class CustomOrder {
         }
         if (this.quantity == null) {
             this.quantity = 1;
+        }
+        if (this.paymentStatus == null) {
+            this.paymentStatus = CustomOrderPaymentStatus.UNPAID;
         }
     }
 

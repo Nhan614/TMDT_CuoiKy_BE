@@ -1,5 +1,6 @@
 package vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -110,5 +111,30 @@ public class CustomOrderController {
                 "Từ chối yêu cầu gia công thành công",
                 customOrderService.rejectCustomOrder(id, dto))
         );
+    }
+
+    /**
+     * Khách hàng xác nhận báo giá và lấy link thanh toán VNPay.
+     * Status ACCEPTED → PAYMENT_PENDING.
+     */
+    @PostMapping("/my/{id}/confirm-payment")
+    public ResponseEntity<ApiResponse<Map<String, String>>> confirmAndPay(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        String paymentUrl = customOrderService.confirmAndPay(id, request);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Tạo link thanh toán đơn gia công thành công",
+                Map.of("paymentUrl", paymentUrl)));
+    }
+
+    /**
+     * Thợ thủ công đánh dấu đơn gia công đã hoàn thành.
+     * Status IN_PROGRESS → COMPLETED.
+     */
+    @PatchMapping("/artisan/{id}/complete")
+    public ResponseEntity<ApiResponse<CustomOrderResponseDTO>> completeCustomOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Đánh dấu hoàn thành đơn gia công thành công",
+                customOrderService.completeCustomOrder(id)));
     }
 }

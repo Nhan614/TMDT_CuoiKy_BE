@@ -2,6 +2,7 @@ package vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.dto.response;
 
 import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity.CustomOrder;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity.CustomOrderReferenceImage;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity.enums.CustomOrderPaymentStatus;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.domain.entity.enums.CustomOrderStatus;
 
 import java.math.BigDecimal;
@@ -25,6 +26,9 @@ public record CustomOrderResponseDTO(
     CustomOrderStatus status,
     String artisanNote,
     BigDecimal quotedPrice,
+    CustomOrderPaymentStatus paymentStatus,
+    String paymentTransactionId,
+    LocalDateTime paymentAt,
     List<String> referenceImageUrls,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
@@ -45,8 +49,11 @@ public record CustomOrderResponseDTO(
             order.getStatus(),
             order.getArtisanNote(),
             order.getQuotedPrice(),
-            order.getReferenceImages() != null ? 
-                order.getReferenceImages().stream().map(CustomOrderReferenceImage::getImageUrl).collect(Collectors.toList()) : 
+            order.getPaymentStatus(),
+            order.getPaymentTransactionId(),
+            order.getPaymentAt(),
+            order.getReferenceImages() != null ?
+                order.getReferenceImages().stream().map(CustomOrderReferenceImage::getImageUrl).collect(Collectors.toList()) :
                 List.of(),
             order.getCreatedAt(),
             order.getUpdatedAt()
