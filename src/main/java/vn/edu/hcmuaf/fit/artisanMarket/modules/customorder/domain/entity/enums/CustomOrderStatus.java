@@ -5,5 +5,7 @@ public enum CustomOrderStatus {
     ACCEPTED,
     REJECTED,
     CANCELLED,
+    PAYMENT_PENDING,
+    IN_PROGRESS,
     COMPLETED
 }
