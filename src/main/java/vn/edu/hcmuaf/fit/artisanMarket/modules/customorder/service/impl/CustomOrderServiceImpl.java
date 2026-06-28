@@ -28,8 +28,12 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.customorder.service.CustomOrderSe
 import vn.edu.hcmuaf.fit.artisanMarket.modules.payment.config.VNPayConfig;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.payment.util.VNPayUtil;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
+import java.math.BigDecimal;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.enums.UserRole;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.repository.UserRepository;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.wallet.domain.entity.WalletTransaction;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.wallet.domain.entity.enums.WalletTransactionType;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.wallet.domain.repository.WalletTransactionRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,6 +47,7 @@ public class CustomOrderServiceImpl implements CustomOrderService {
 
     private final CustomOrderRepository customOrderRepository;
     private final UserRepository userRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
     private final ArtisanRepository artisanRepository;
     private final CloudinaryService cloudinaryService;
     private final VNPayUtil vnpayUtil;
@@ -395,9 +400,62 @@ public class CustomOrderServiceImpl implements CustomOrderService {
                     "Chỉ có thể đánh dấu hoàn thành đơn gia công đang ở trạng thái thực hiện (IN_PROGRESS)");
         }
 
+        customOrder.setStatus(CustomOrderStatus.DELIVERED);
+        customOrder = customOrderRepository.save(customOrder);
+        log.info("Đơn gia công {} đã được đánh dấu DELIVERED", customOrderId);
+        return CustomOrderResponseDTO.fromEntity(customOrder);
+    }
+
+    @Override
+    @Transactional
+    public CustomOrderResponseDTO confirmReceived(Long customOrderId) {
+        log.info("Khách hàng xác nhận nhận hàng cho đơn gia công ID: {}", customOrderId);
+
+        User customer = userRepository.findByUsername(getCurrentUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
+
+        CustomOrder customOrder = customOrderRepository.findById(customOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu gia công"));
+
+        // Chỉ khách hàng tạo đơn mới có quyền xác nhận nhận hàng
+        if (!customOrder.getUser().getId().equals(customer.getId())) {
+            throw new IllegalStateException("Bạn không có quyền xác nhận nhận hàng cho đơn gia công này");
+        }
+
+        // Chỉ xác nhận khi đơn ở trạng thái DELIVERED
+        if (customOrder.getStatus() != CustomOrderStatus.DELIVERED) {
+            throw new IllegalStateException("Chỉ có thể xác nhận nhận hàng khi đơn ở trạng thái đã giao hàng (DELIVERED)");
+        }
+
+        // 1. Cập nhật trạng thái đơn hàng -> COMPLETED
         customOrder.setStatus(CustomOrderStatus.COMPLETED);
         customOrder = customOrderRepository.save(customOrder);
-        log.info("Đơn gia công {} đã được đánh dấu COMPLETED", customOrderId);
+
+        // 2. Cộng tiền vào số dư của thợ thủ công (Artisan)
+        // Lấy User liên kết với Artisan thực hiện đơn hàng
+        User artisanUser = userRepository.findById(customOrder.getArtisan().getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản người dùng của nghệ nhân"));
+
+        BigDecimal amount = customOrder.getQuotedPrice();
+        if (amount == null) {
+            amount = customOrder.getBudget(); // fallback
+        }
+        
+        artisanUser.setBalance(artisanUser.getBalance().add(amount));
+        userRepository.save(artisanUser);
+
+        // 3. Ghi nhận lịch sử giao dịch
+        WalletTransaction transaction = WalletTransaction.builder()
+                .user(artisanUser)
+                .customOrder(customOrder)
+                .type(WalletTransactionType.CREDIT)
+                .amount(amount)
+                .balanceAfter(artisanUser.getBalance())
+                .description("Thu nhập từ đơn gia công #" + customOrder.getId())
+                .build();
+        walletTransactionRepository.save(transaction);
+
+        log.info("Đơn gia công {} đã hoàn tất, thợ thủ công {} được cộng {} VND", customOrderId, artisanUser.getUsername(), amount);
         return CustomOrderResponseDTO.fromEntity(customOrder);
     }
 }

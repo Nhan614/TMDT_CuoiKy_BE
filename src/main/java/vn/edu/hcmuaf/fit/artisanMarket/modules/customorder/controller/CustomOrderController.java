@@ -129,12 +129,23 @@ public class CustomOrderController {
 
     /**
      * Thợ thủ công đánh dấu đơn gia công đã hoàn thành.
-     * Status IN_PROGRESS → COMPLETED.
+     * Status IN_PROGRESS → DELIVERED.
      */
     @PatchMapping("/artisan/{id}/complete")
     public ResponseEntity<ApiResponse<CustomOrderResponseDTO>> completeCustomOrder(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Đánh dấu hoàn thành đơn gia công thành công",
                 customOrderService.completeCustomOrder(id)));
+    }
+
+    /**
+     * Khách hàng xác nhận đã nhận hàng gia công.
+     * Status DELIVERED → COMPLETED.
+     */
+    @PatchMapping("/my/{id}/confirm-received")
+    public ResponseEntity<ApiResponse<CustomOrderResponseDTO>> confirmReceived(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Xác nhận đã nhận hàng gia công thành công",
+                customOrderService.confirmReceived(id)));
     }
 }

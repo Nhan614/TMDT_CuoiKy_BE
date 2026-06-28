@@ -5,6 +5,7 @@ import lombok.*;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.enums.UserRole;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.enums.UserStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,4 +39,8 @@ public class User {
 
     @Column(name = "reset_password_token_expiry")
     private LocalDateTime resetPasswordTokenExpiry;
+
+    @Column(name = "balance", nullable = false, precision = 15, scale = 2, columnDefinition = "DECIMAL(15,2) DEFAULT 0.00")
+    @Builder.Default
+    private BigDecimal balance = BigDecimal.ZERO;
 }
