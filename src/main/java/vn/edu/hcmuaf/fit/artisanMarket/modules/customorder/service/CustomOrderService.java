@@ -46,7 +46,14 @@ public interface CustomOrderService {
 
     /**
      * Thợ thủ công đánh dấu đơn gia công đã hoàn thành.
-     * Chuyển trạng thái từ IN_PROGRESS → COMPLETED.
+     * Chuyển trạng thái từ IN_PROGRESS → DELIVERED.
      */
     CustomOrderResponseDTO completeCustomOrder(Long customOrderId);
+
+    /**
+     * Khách hàng xác nhận đã nhận hàng gia công.
+     * Chuyển trạng thái từ DELIVERED → COMPLETED.
+     * Cộng tiền cho thợ thủ công và ghi nhận lịch sử giao dịch.
+     */
+    CustomOrderResponseDTO confirmReceived(Long customOrderId);
 }

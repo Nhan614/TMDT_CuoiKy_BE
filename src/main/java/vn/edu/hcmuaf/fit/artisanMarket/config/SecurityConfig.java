@@ -80,6 +80,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/custom-orders/my/**").hasRole("USER")
                         .requestMatchers("/api/custom-orders/artisan/**").hasRole("ARTISAN")
 
+                        // Wallet — ARTISAN
+                        .requestMatchers("/api/wallet/**").hasRole("ARTISAN")
+
                         // Orders, Cart, Payment — USER, ARTISAN, ADMIN
                         .requestMatchers("/api/orders/**").hasAnyRole("USER", "ARTISAN", "ADMIN")
                         .requestMatchers("/api/cart/**").hasAnyRole("USER", "ARTISAN", "ADMIN")
