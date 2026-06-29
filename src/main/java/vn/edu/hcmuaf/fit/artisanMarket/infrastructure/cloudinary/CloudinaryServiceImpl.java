@@ -62,4 +62,40 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             throw new RuntimeException("Lỗi khi xóa ảnh trên Cloudinary", e);
         }
     }
+
+    @Override
+    public Map<String, String> upload(MultipartFile file, String folder) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File không được trống");
+        }
+
+        // Validate content type
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException("Định dạng file không hỗ trợ. Chỉ hỗ trợ JPEG, PNG, WEBP");
+        }
+
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("Dung lượng file tối đa là 5MB");
+        }
+
+        try {
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                    "folder", folder,
+                    "resource_type", "image"
+            ));
+            return Map.of(
+                    "url", (String) uploadResult.get("secure_url"),
+                    "public_id", (String) uploadResult.get("public_id")
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi tải ảnh lên Cloudinary", e);
+        }
+    }
+
+    @Override
+    public void delete(String publicId) {
+        deleteImage(publicId);
+    }
 }

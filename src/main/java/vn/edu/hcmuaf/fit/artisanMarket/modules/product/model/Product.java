@@ -3,6 +3,8 @@ package vn.edu.hcmuaf.fit.artisanMarket.modules.product.model;
 import jakarta.persistence.*;
 import lombok.*;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.model.Artisan;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.enums.ProductStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -79,6 +81,17 @@ public class Product {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true; // Trạng thái kích hoạt (ẩn/hiển thị trên web)
+
+    @Column(name = "cloudinary_public_id", length = 255)
+    private String cloudinaryPublicId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 50)
+    private ProductStatus status = ProductStatus.ACTIVE;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "artisan_id")
+    private Artisan artisan;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
