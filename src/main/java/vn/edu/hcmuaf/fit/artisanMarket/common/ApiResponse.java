@@ -70,6 +70,24 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    public static <T> ApiResponse<Page<T>> success(Page<T> pageData, String message) {
+        return ApiResponse.<Page<T>>builder()
+                .success(true)
+                .message(message)
+                .data(pageData) // Trả về nguyên đối tượng Page
+                .meta(Meta.builder()
+                        .timestamp(Instant.now().toString())
+                        .version("v1")
+                        .page(pageData.getNumber() + 1)
+                        .size(pageData.getSize())
+                        .totalPages(pageData.getTotalPages())
+                        .totalElements(pageData.getTotalElements())
+                        .build())
+                .build();
+    }
+
+
+
     public static <T> ApiResponse<T> error(String message) {
         return ApiResponse.<T>builder()
                 .success(false)

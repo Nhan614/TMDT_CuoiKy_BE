@@ -34,7 +34,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> getAllCategories(
+    public ResponseEntity<ApiResponse<Page<CategoryResponseDTO>>> getAllCategories(
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false) String search,
@@ -44,8 +44,7 @@ public class CategoryController {
         Page<CategoryResponseDTO> categories = categoryService.getAllCategories(page, size, search, parentId, isActive,
                 sortBy);
         return ResponseEntity.ok(ApiResponse.success(
-                "Lấy danh sách danh mục thành công",
-                categories));
+                categories, "Lấy danh sách danh mục thành công"));
     }
 
     @PatchMapping("/{id}")

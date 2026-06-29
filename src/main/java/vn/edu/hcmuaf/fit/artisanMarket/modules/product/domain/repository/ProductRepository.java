@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.enums.ProductStatus;
 
 import java.util.Optional;
 
@@ -20,6 +21,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
         boolean existsBySlugAndIdNot(String slug, Long id);
 
+        Page<Product> findByArtisanIdAndStatusNot(Long artisanId, ProductStatus status, Pageable pageable);
+
+        Optional<Product> findByIdAndArtisanId(Long id, Long artisanId);
+
         @Query("SELECT p FROM Product p WHERE " +
                         "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.shortDescription) LIKE LOWER(CONCAT('%', :search, '%'))) AND "
                         +
@@ -29,5 +34,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         @Param("search") String search,
                         @Param("categoryId") Long categoryId,
                         @Param("isActive") Boolean isActive,
+                        Pageable pageable);
+
+        @Query("SELECT p FROM Product p WHERE " +
+                        "(:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+                        "(:status IS NULL OR p.status = :status)")
+        Page<Product> findAllForAdmin(
+                        @Param("keyword") String keyword,
+                        @Param("status") ProductStatus status,
                         Pageable pageable);
 }
