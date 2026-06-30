@@ -1,0 +1,24 @@
+package vn.edu.hcmuaf.fit.artisanMarket.modules.dashboard.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class DashboardOverviewDTO {
+    private BigDecimal totalRevenue;
+    private BigDecimal totalRegularRevenue;
+    private BigDecimal totalCustomRevenue;
+    private long totalOrders;
+    private long totalRegularOrders;
+    private long totalCustomOrders;
+    private long totalProducts;
+    private long totalArtisans;
+    private long totalCustomers;
+}
