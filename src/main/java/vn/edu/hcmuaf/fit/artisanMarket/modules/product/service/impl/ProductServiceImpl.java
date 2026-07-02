@@ -22,6 +22,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.infrastructure.cloudinary.CloudinaryServi
 import vn.edu.hcmuaf.fit.artisanMarket.infrastructure.mail.EmailService;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.domain.repository.AuthRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import java.util.Map;
@@ -51,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductResponseDTO> getAllProducts(int page, int size, String search, Long categoryId, Boolean isActive,
+    public Page<ProductResponseDTO> getAllProducts(int page, int size, String search, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Boolean isActive,
             String sortBy) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if (sortBy != null) {
@@ -72,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, size, sort);
-        Page<Product> products = productRepository.findProducts(search, categoryId, isActive, pageable);
+        Page<Product> products = productRepository.findProducts(search, categoryId, minPrice, maxPrice, isActive, pageable);
         return products.map(this::toDTO);
     }
 

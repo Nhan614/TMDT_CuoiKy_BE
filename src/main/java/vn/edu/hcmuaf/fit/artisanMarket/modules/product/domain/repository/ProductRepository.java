@@ -30,10 +30,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.shortDescription) LIKE LOWER(CONCAT('%', :search, '%'))) AND "
                         +
                         "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+                        "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+                        "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
                         "(:isActive IS NULL OR p.isActive = :isActive)")
         Page<Product> findProducts(
                         @Param("search") String search,
                         @Param("categoryId") Long categoryId,
+                        @Param("minPrice") java.math.BigDecimal minPrice,
+                        @Param("maxPrice") java.math.BigDecimal maxPrice,
                         @Param("isActive") Boolean isActive,
                         Pageable pageable);
 
@@ -46,4 +50,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         @Param("keyword") String keyword,
                         @Param("status") ProductStatus status,
                         Pageable pageable);
+
+        @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId AND p.status = vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.enums.ProductStatus.ACTIVE AND p.isActive = true")
+        long countActiveProductsByCategoryId(@Param("categoryId") Long categoryId);
 }

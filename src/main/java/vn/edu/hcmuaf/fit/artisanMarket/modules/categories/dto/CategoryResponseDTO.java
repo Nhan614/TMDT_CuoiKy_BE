@@ -17,6 +17,7 @@ public class CategoryResponseDTO {
     private boolean isActive;
     private Long parentId;
     private String parentName;
+    private Long productCount;
 
     public static CategoryResponseDTO fromEntity(Category category) {
         if (category == null)
@@ -30,6 +31,7 @@ public class CategoryResponseDTO {
                 .isActive(category.isActive())
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
                 .parentName(category.getParent() != null ? category.getParent().getName() : null)
+                .productCount(null)
                 .build();
     }
 }

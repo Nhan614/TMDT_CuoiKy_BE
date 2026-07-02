@@ -58,10 +58,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*/comments").permitAll()
 
-                        // Comments
+                        // Comments (đánh giá sản phẩm — module cũ)
                         .requestMatchers(HttpMethod.POST, "/api/products/*/comments").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/comments/my").authenticated()
+
+                        // Product Comments (bình luận tự do — module mới)
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/product-comments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/product-comments/*/replies").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/*/product-comments").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/product-comments/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/product-comments/**").authenticated()
 
                         // User profile — any authenticated user
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()

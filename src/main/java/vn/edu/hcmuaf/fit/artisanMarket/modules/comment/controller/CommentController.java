@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.artisanMarket.common.ApiResponse;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentEligibilityDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.service.CommentService;
@@ -29,6 +30,14 @@ public class CommentController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         CommentResponseDTO response = commentService.addComment(username, productId, request);
         return ResponseEntity.ok(ApiResponse.success("Thêm bình luận thành công", response));
+    }
+
+    @GetMapping("/products/{productId}/comments/eligibility")
+    public ResponseEntity<ApiResponse<CommentEligibilityDTO>> checkEligibility(
+            @PathVariable Long productId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        CommentEligibilityDTO result = commentService.checkEligibility(username, productId);
+        return ResponseEntity.ok(ApiResponse.success("Kiểm tra điều kiện đánh giá thành công", result));
     }
 
     @GetMapping("/products/{productId}/comments")
@@ -55,3 +64,4 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bình luận của tôi thành công", comments));
     }
 }
+

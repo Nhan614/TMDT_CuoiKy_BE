@@ -19,4 +19,19 @@ ALTER TABLE products ADD COLUMN reject_reason TEXT DEFAULT NULL;
 ALTER TABLE products ADD COLUMN reviewed_by BIGINT DEFAULT NULL;
 ALTER TABLE products ADD COLUMN reviewed_at DATETIME DEFAULT NULL;
 
+-- Tạo bảng bình luận sản phẩm (product_comments)
+-- Lưu ý: Hibernate ddl-auto=update sẽ tự tạo bảng này.
+-- Script này chỉ để tham khảo cấu trúc và chạy thủ công nếu cần.
+CREATE TABLE IF NOT EXISTS product_comments (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content    TEXT         NOT NULL,
+    product_id BIGINT       NOT NULL,
+    user_id    BIGINT       NOT NULL,
+    parent_id  BIGINT       DEFAULT NULL,
+    created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_prod_comment_product FOREIGN KEY (product_id) REFERENCES products (id),
+    CONSTRAINT fk_prod_comment_user    FOREIGN KEY (user_id)    REFERENCES users (id),
+    CONSTRAINT fk_prod_comment_parent  FOREIGN KEY (parent_id)  REFERENCES product_comments (id) ON DELETE CASCADE
+);
 
