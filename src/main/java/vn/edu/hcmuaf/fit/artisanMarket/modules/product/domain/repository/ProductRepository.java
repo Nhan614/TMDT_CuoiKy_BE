@@ -26,6 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         Optional<Product> findByIdAndArtisanId(Long id, Long artisanId);
 
         @Query("SELECT p FROM Product p WHERE " +
+                        "p.status = vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.enums.ProductStatus.ACTIVE AND " +
                         "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.shortDescription) LIKE LOWER(CONCAT('%', :search, '%'))) AND "
                         +
                         "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
@@ -35,6 +36,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         @Param("categoryId") Long categoryId,
                         @Param("isActive") Boolean isActive,
                         Pageable pageable);
+
+        Page<Product> findByStatus(ProductStatus status, Pageable pageable);
 
         @Query("SELECT p FROM Product p WHERE " +
                         "(:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +

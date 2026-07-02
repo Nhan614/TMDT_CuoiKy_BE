@@ -19,6 +19,10 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.product.service.ProductService;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.model.Artisan;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.repository.ArtisanRepository;
 import vn.edu.hcmuaf.fit.artisanMarket.infrastructure.cloudinary.CloudinaryService;
+import vn.edu.hcmuaf.fit.artisanMarket.infrastructure.mail.EmailService;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.auth.domain.repository.AuthRepository;
+import java.time.LocalDateTime;
 
 import java.util.Map;
 
@@ -30,43 +34,11 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final ArtisanRepository artisanRepository;
     private final CloudinaryService cloudinaryService;
+    private final AuthRepository userRepository;
+    private final EmailService emailService;
 
     private ProductResponseDTO toDTO(Product product) {
         return ProductResponseDTO.fromEntity(product);
-    }
-
-    @Override
-    @Transactional
-    public ProductResponseDTO createProduct(ProductRequestDTO request) {
-        if (productRepository.existsBySlug(request.getSlug())) {
-            throw new RuntimeException("Đường dẫn thân thiện (slug) của sản phẩm đã tồn tại");
-        }
-
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
-
-        Product product = Product.builder()
-                .name(request.getName())
-                .slug(request.getSlug())
-                .description(request.getDescription())
-                .shortDescription(request.getShortDescription())
-                .price(request.getPrice())
-                .discountPrice(request.getDiscountPrice())
-                .stockQuantity(request.getStockQuantity())
-                .isPreOrder(request.getIsPreOrder() != null ? request.getIsPreOrder() : false)
-                .makingDays(request.getMakingDays())
-                .artisanName(request.getArtisanName())
-                .thumbnailUrl(request.getThumbnailUrl())
-                .images(request.getImages())
-                .materials(request.getMaterials())
-                .category(category)
-                .averageRating(0.0)
-                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
-                .status(ProductStatus.ACTIVE)
-                .build();
-
-        Product savedProduct = productRepository.save(product);
-        return toDTO(savedProduct);
     }
 
     @Override
@@ -102,89 +74,6 @@ public class ProductServiceImpl implements ProductService {
         Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, size, sort);
         Page<Product> products = productRepository.findProducts(search, categoryId, isActive, pageable);
         return products.map(this::toDTO);
-    }
-
-    @Override
-    @Transactional
-    public ProductResponseDTO updateProduct(Long id, ProductRequestDTO request) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
-
-        if (request.getSlug() != null && !request.getSlug().equals(product.getSlug())) {
-            if (productRepository.existsBySlugAndIdNot(request.getSlug(), id)) {
-                throw new RuntimeException("Đường dẫn thân thiện (slug) của sản phẩm đã tồn tại");
-            }
-            product.setSlug(request.getSlug());
-        }
-
-        if (request.getName() != null) {
-            product.setName(request.getName());
-        }
-        if (request.getDescription() != null) {
-            product.setDescription(request.getDescription());
-        }
-        if (request.getShortDescription() != null) {
-            product.setShortDescription(request.getShortDescription());
-        }
-        if (request.getPrice() != null) {
-            product.setPrice(request.getPrice());
-        }
-        if (request.getDiscountPrice() != null) {
-            product.setDiscountPrice(request.getDiscountPrice());
-        }
-        if (request.getStockQuantity() != null) {
-            product.setStockQuantity(request.getStockQuantity());
-        }
-        if (request.getIsPreOrder() != null) {
-            product.setPreOrder(request.getIsPreOrder());
-        }
-        if (request.getMakingDays() != null) {
-            product.setMakingDays(request.getMakingDays());
-        }
-        if (request.getArtisanName() != null) {
-            product.setArtisanName(request.getArtisanName());
-        }
-        if (request.getImage() != null && !request.getImage().isEmpty()) {
-            if (product.getCloudinaryPublicId() != null) {
-                try {
-                    cloudinaryService.delete(product.getCloudinaryPublicId());
-                } catch (Exception e) {
-                    // Ignore deletion error
-                }
-            }
-            Map<String, String> uploadResult = cloudinaryService.upload(
-                    request.getImage(), "artisan-market/products"
-            );
-            product.setThumbnailUrl(uploadResult.get("url"));
-            product.setCloudinaryPublicId(uploadResult.get("public_id"));
-        } else if (request.getThumbnailUrl() != null) {
-            product.setThumbnailUrl(request.getThumbnailUrl());
-        }
-        if (request.getImages() != null) {
-            product.setImages(request.getImages());
-        }
-        if (request.getMaterials() != null) {
-            product.setMaterials(request.getMaterials());
-        }
-        if (request.getCategoryId() != null) {
-            Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
-            product.setCategory(category);
-        }
-        if (request.getIsActive() != null) {
-            product.setActive(request.getIsActive());
-        }
-
-        Product updatedProduct = productRepository.save(product);
-        return toDTO(updatedProduct);
-    }
-
-    @Override
-    @Transactional
-    public void deleteProduct(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
-        productRepository.delete(product);
     }
 
     // ── ARTISAN PRODUCT MANAGEMENT ───────────────────────────────────────────
@@ -243,8 +132,8 @@ public class ProductServiceImpl implements ProductService {
                 .category(category)
                 .artisan(artisan)
                 .averageRating(0.0)
-                .isActive(true)
-                .status(ProductStatus.ACTIVE)
+                .isActive(false)
+                .status(ProductStatus.PENDING)
                 .build();
 
         Product savedProduct = productRepository.save(product);
@@ -322,9 +211,10 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
             product.setCategory(category);
         }
-        if (request.getIsActive() != null) {
-            product.setActive(request.getIsActive());
-        }
+        // Khi cập nhật sản phẩm, đưa về trạng thái chờ duyệt PENDING và tạm ẩn
+        product.setStatus(ProductStatus.PENDING);
+        product.setActive(false);
+        product.setRejectReason(null);
 
         Product updatedProduct = productRepository.save(product);
         return ProductResponseDTO.fromEntity(updatedProduct);
@@ -335,6 +225,12 @@ public class ProductServiceImpl implements ProductService {
     public void toggleProductStatus(Long artisanId, Long productId, ProductStatus status) {
         Product product = productRepository.findByIdAndArtisanId(productId, artisanId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm hoặc bạn không có quyền chỉnh sửa"));
+        if (product.getStatus() != ProductStatus.ACTIVE && product.getStatus() != ProductStatus.HIDDEN) {
+            throw new RuntimeException("Chỉ có thể ẩn/hiện sản phẩm đã qua kiểm duyệt");
+        }
+        if (status != ProductStatus.ACTIVE && status != ProductStatus.HIDDEN) {
+            throw new RuntimeException("Trạng thái chuyển đổi không hợp lệ");
+        }
         product.setStatus(status);
         product.setActive(status == ProductStatus.ACTIVE);
         productRepository.save(product);
@@ -376,9 +272,90 @@ public class ProductServiceImpl implements ProductService {
     public void adminToggleStatus(Long productId, ProductStatus status) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        if (product.getStatus() != ProductStatus.ACTIVE && product.getStatus() != ProductStatus.HIDDEN) {
+            throw new RuntimeException("Chỉ có thể ẩn/hiện sản phẩm đã qua kiểm duyệt");
+        }
+        if (status != ProductStatus.ACTIVE && status != ProductStatus.HIDDEN) {
+            throw new RuntimeException("Trạng thái chuyển đổi không hợp lệ");
+        }
         product.setStatus(status);
         product.setActive(status == ProductStatus.ACTIVE);
         productRepository.save(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDTO> getPendingProducts(Pageable pageable) {
+        return productRepository.findByStatus(ProductStatus.PENDING, pageable)
+                .map(ProductResponseDTO::fromEntity);
+    }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO approveProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+
+        if (product.getStatus() != ProductStatus.PENDING) {
+            throw new IllegalStateException("Sản phẩm không ở trạng thái chờ duyệt");
+        }
+
+        String adminUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User admin = userRepository.findByUsername(adminUsername)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản admin"));
+
+        product.setStatus(ProductStatus.ACTIVE);
+        product.setActive(true);
+        product.setReviewedBy(admin.getId());
+        product.setReviewedAt(LocalDateTime.now());
+        product.setRejectReason(null);
+
+        Product savedProduct = productRepository.save(product);
+
+        // Gửi email thông báo cho Artisan
+        if (product.getArtisan() != null && product.getArtisan().getUserId() != null) {
+            userRepository.findById(product.getArtisan().getUserId()).ifPresent(user -> {
+                if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+                    emailService.sendProductApprovedEmail(user.getEmail(), product.getName());
+                }
+            });
+        }
+
+        return ProductResponseDTO.fromEntity(savedProduct);
+    }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO rejectProduct(Long productId, String reason) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+
+        if (product.getStatus() != ProductStatus.PENDING) {
+            throw new IllegalStateException("Sản phẩm không ở trạng thái chờ duyệt");
+        }
+
+        String adminUsername = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User admin = userRepository.findByUsername(adminUsername)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản admin"));
+
+        product.setStatus(ProductStatus.REJECTED);
+        product.setActive(false);
+        product.setRejectReason(reason);
+        product.setReviewedBy(admin.getId());
+        product.setReviewedAt(LocalDateTime.now());
+
+        Product savedProduct = productRepository.save(product);
+
+        // Gửi email thông báo cho Artisan
+        if (product.getArtisan() != null && product.getArtisan().getUserId() != null) {
+            userRepository.findById(product.getArtisan().getUserId()).ifPresent(user -> {
+                if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+                    emailService.sendProductRejectedEmail(user.getEmail(), product.getName(), reason);
+                }
+            });
+        }
+
+        return ProductResponseDTO.fromEntity(savedProduct);
     }
 
     // ── SLUG GENERATOR HELPER ────────────────────────────────────────────────
