@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.artisanMarket.common.ApiResponse;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.dto.ProductRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.dto.ProductResponseDTO;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.dto.RejectProductRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.enums.ProductStatus;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.service.ProductService;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
@@ -138,25 +139,33 @@ public class ProductController {
                 "Lấy danh sách tất cả sản phẩm thành công"));
     }
 
-    @PostMapping(value = "/admin/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/admin/products/pending")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductResponseDTO>> adminCreateProduct(
-            @ModelAttribute @Valid ProductRequestDTO request,
-            @RequestParam Long artisanId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(
-                        "Thêm sản phẩm thành công (Admin)",
-                        productService.createProduct(artisanId, request)));
+    public ResponseEntity<ApiResponse<Page<ProductResponseDTO>>> getPendingProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, size);
+        return ResponseEntity.ok(ApiResponse.success(
+                productService.getPendingProducts(pageable),
+                "Lấy danh sách sản phẩm chờ duyệt thành công"));
     }
 
-    @PutMapping(value = "/admin/products/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping("/admin/products/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductResponseDTO>> adminUpdateProduct(
-            @PathVariable Long id,
-            @ModelAttribute @Valid ProductRequestDTO request) {
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> approveProduct(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(
-                "Cập nhật sản phẩm thành công (Admin)",
-                productService.updateProduct(id, request)));
+                "Duyệt sản phẩm thành công",
+                productService.approveProduct(id)));
+    }
+
+    @PatchMapping("/admin/products/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> rejectProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody RejectProductRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Từ chối sản phẩm thành công",
+                productService.rejectProduct(id, dto.reason())));
     }
 
     @PatchMapping("/admin/products/{id}/status")

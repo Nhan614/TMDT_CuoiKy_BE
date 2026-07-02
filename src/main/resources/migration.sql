@@ -14,3 +14,9 @@ ALTER TABLE users ADD COLUMN verification_token_expiry DATETIME DEFAULT NULL;
 -- Các tài khoản cũ đã tồn tại trước khi có tính năng này coi như đã xác thực
 UPDATE users SET email_verified = TRUE WHERE email_verified = FALSE;
 
+-- Thêm các trường duyệt sản phẩm
+ALTER TABLE products ADD COLUMN reject_reason TEXT DEFAULT NULL;
+ALTER TABLE products ADD COLUMN reviewed_by BIGINT DEFAULT NULL;
+ALTER TABLE products ADD COLUMN reviewed_at DATETIME DEFAULT NULL;
+
+

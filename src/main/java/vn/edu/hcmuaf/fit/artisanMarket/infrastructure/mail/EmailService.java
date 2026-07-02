@@ -5,4 +5,7 @@ public interface EmailService {
 
     // === MỚI ===
     void sendVerificationEmail(String toEmail, String verifyLink);
+
+    void sendProductApprovedEmail(String toEmail, String productName);
+    void sendProductRejectedEmail(String toEmail, String productName, String reason);
 }

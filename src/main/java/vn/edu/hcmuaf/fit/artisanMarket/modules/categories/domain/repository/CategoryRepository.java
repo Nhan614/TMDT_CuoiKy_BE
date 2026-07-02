@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,6 +24,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
         boolean existsByName(String name);
 
         boolean existsByNameAndIdNot(String name, Long id);
+
+        /** Lấy danh sách tất cả category đang active (dùng cho dropdown) */
+        List<Category> findByIsActiveTrueOrderByNameAsc();
 
         @Query("SELECT c FROM Category c WHERE " +
                         "(:search IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(c.description) LIKE LOWER(CONCAT('%', :search, '%'))) AND "

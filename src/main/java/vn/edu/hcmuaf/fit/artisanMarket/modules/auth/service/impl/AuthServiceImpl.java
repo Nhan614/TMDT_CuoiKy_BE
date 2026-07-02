@@ -59,8 +59,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        // === MỚI: chặn nếu email chưa xác thực ===
-        if (!user.isEmailVerified()) {
+        // Admin không cần xác thực email
+        if (!user.isEmailVerified() && user.getRole() != UserRole.ADMIN) {
             throw new RuntimeException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác nhận trước khi đăng nhập");
         }
 

@@ -36,6 +36,9 @@ public class ProductResponseDTO {
     private Double averageRating;
     private boolean isActive;
     private ProductStatus status;
+    private String rejectReason;
+    private Long reviewedBy;
+    private LocalDateTime reviewedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -65,6 +68,9 @@ public class ProductResponseDTO {
                 .averageRating(product.getAverageRating())
                 .isActive(product.isActive())
                 .status(product.getStatus())
+                .rejectReason(product.getRejectReason())
+                .reviewedBy(product.getReviewedBy())
+                .reviewedAt(product.getReviewedAt())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();

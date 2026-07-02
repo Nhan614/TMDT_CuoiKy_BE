@@ -88,4 +88,68 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Không thể gửi email xác nhận, vui lòng thử lại sau");
         }
     }
+
+    @Override
+    public void sendProductApprovedEmail(String toEmail, String productName) {
+        log.info("======== PRODUCT APPROVED EMAIL ========");
+        log.info("Send to: {}", toEmail);
+        log.info("Product: {}", productName);
+        log.info("========================================");
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[Artisan Market] Sản phẩm của bạn đã được duyệt thành công");
+
+            String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;\">" +
+                    "<h2 style=\"color: #4CAF50; text-align: center;\">Chúc Mừng!</h2>" +
+                    "<p>Xin chào,</p>" +
+                    "<p>Sản phẩm <strong>" + productName + "</strong> của bạn đã được Admin phê duyệt thành công và hiện tại đã được hiển thị công khai trên sàn giao dịch Artisan Market.</p>" +
+                    "<p>Bạn có thể vào trang quản lý sản phẩm của mình để theo dõi lượt xem và quản lý tồn kho của sản phẩm.</p>" +
+                    "<hr style=\"border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;\">" +
+                    "<p style=\"font-size: 12px; color: #999999; text-align: center;\">Artisan Market</p>" +
+                    "</div>";
+
+            helper.setText(content, true);
+            mailSender.send(message);
+            log.info("Product approved email successfully sent to {}", toEmail);
+        } catch (Exception e) {
+            log.error("Gửi email thông báo duyệt sản phẩm thất bại: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendProductRejectedEmail(String toEmail, String productName, String reason) {
+        log.info("======== PRODUCT REJECTED EMAIL ========");
+        log.info("Send to: {}", toEmail);
+        log.info("Product: {}", productName);
+        log.info("Reason: {}", reason);
+        log.info("========================================");
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[Artisan Market] Thông báo kết quả duyệt sản phẩm");
+
+            String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;\">" +
+                    "<h2 style=\"color: #f44336; text-align: center;\">Sản phẩm không được duyệt</h2>" +
+                    "<p>Xin chào,</p>" +
+                    "<p>Chúng tôi rất tiếc phải thông báo sản phẩm <strong>" + productName + "</strong> của bạn không được phê duyệt để bán trên sàn giao dịch Artisan Market.</p>" +
+                    "<p><strong>Lý do từ chối:</strong> " + reason + "</p>" +
+                    "<p>Vui lòng điều chỉnh lại thông tin sản phẩm và gửi lại yêu cầu duyệt để chúng tôi có thể phê duyệt sản phẩm của bạn sớm nhất.</p>" +
+                    "<hr style=\"border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;\">" +
+                    "<p style=\"font-size: 12px; color: #999999; text-align: center;\">Artisan Market</p>" +
+                    "</div>";
+
+            helper.setText(content, true);
+            mailSender.send(message);
+            log.info("Product rejected email successfully sent to {}", toEmail);
+        } catch (Exception e) {
+            log.error("Gửi email thông báo từ chối sản phẩm thất bại: {}", e.getMessage());
+        }
+    }
 }

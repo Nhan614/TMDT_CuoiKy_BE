@@ -14,27 +14,106 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.dto.CategoryResponseDT
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.service.CategoryService;
 
+import java.text.Normalizer;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
 
+    // ─── Helper: DTO ───────────────────────────────────────────────────────────
+
     private CategoryResponseDTO toDTO(Category category) {
         return CategoryResponseDTO.fromEntity(category);
     }
 
+    // ─── Helper: Slug generation ────────────────────────────────────────────────
+
+    /**
+     * Sinh slug từ name: normalize Unicode (NFKD) → bỏ dấu → lowercase
+     * → thay khoảng trắng & ký tự đặc biệt bằng "-" → trim dấu "-" đầu/cuối.
+     */
+    private String generateSlug(String name) {
+        String normalized = Normalizer.normalize(name, Normalizer.Form.NFKD);
+        // Loại bỏ combining diacritical marks (dấu tiếng Việt)
+        String noAccent = normalized.replaceAll("\\p{M}", "");
+        String lower = noAccent.toLowerCase();
+        // Thay đặc biệt / khoảng trắng → dấu gạch ngang
+        String slug = lower.replaceAll("[^a-z0-9]+", "-");
+        // Trim đầu/cuối
+        slug = slug.replaceAll("^-+|-+$", "");
+        return slug;
+    }
+
+    /**
+     * Đảm bảo slug là duy nhất: nếu trùng thì thêm suffix -2, -3, …
+     */
+    private String ensureUniqueSlug(String baseSlug, Long excludeId) {
+        String slug = baseSlug;
+        int counter = 1;
+        while (true) {
+            boolean exists = (excludeId == null)
+                    ? categoryRepository.existsBySlug(slug)
+                    : categoryRepository.existsBySlugAndIdNot(slug, excludeId);
+            if (!exists) return slug;
+            counter++;
+            slug = baseSlug + "-" + counter;
+        }
+    }
+
+    // ─── Helper: Cycle detection ────────────────────────────────────────────────
+
+    /**
+     * Kiểm tra xem potentialParentId có phải là con (hoặc cháu) của categoryId không.
+     * Dùng để chặn vòng lặp A→B→A khi cập nhật parentId.
+     */
+    private boolean wouldCreateCycle(Long categoryId, Long potentialParentId) {
+        if (potentialParentId == null) return false;
+        Long current = potentialParentId;
+        // Traverse up the hierarchy
+        while (current != null) {
+            if (current.equals(categoryId)) return true;
+            Category cat = categoryRepository.findById(current).orElse(null);
+            if (cat == null || cat.getParent() == null) break;
+            current = cat.getParent().getId();
+        }
+        return false;
+    }
+
+    // ─── CRUD ──────────────────────────────────────────────────────────────────
+
     @Override
     @Transactional
     public CategoryResponseDTO createCategory(CategoryRequestDTO request) {
-        if (categoryRepository.existsBySlug(request.getSlug())) {
-            throw new RuntimeException("Đường dẫn thân thiện (slug) của danh mục đã tồn tại");
+        // Kiểm tra tên bắt buộc
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new RuntimeException("Tên danh mục không được để trống");
         }
 
+        // Kiểm tra tên trùng
         if (categoryRepository.existsByName(request.getName())) {
             throw new RuntimeException("Tên danh mục đã tồn tại");
         }
 
+        // Sinh slug nếu FE không gửi
+        String slug;
+        if (request.getSlug() == null || request.getSlug().isBlank()) {
+            slug = generateSlug(request.getName());
+        } else {
+            slug = request.getSlug();
+        }
+        slug = ensureUniqueSlug(slug, null);
+
+        // Kiểm tra slug trùng (trường hợp FE gửi slug thủ công)
+        if (!slug.equals(generateSlug(request.getName())) && categoryRepository.existsBySlug(slug)) {
+            throw new RuntimeException("Đường dẫn thân thiện (slug) của danh mục đã tồn tại");
+        }
+
+        // Tìm category cha
         Category parent = null;
         if (request.getParentId() != null && request.getParentId() > 0) {
             parent = categoryRepository.findById(request.getParentId())
@@ -43,15 +122,14 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category category = Category.builder()
                 .name(request.getName())
-                .slug(request.getSlug())
+                .slug(slug)
                 .description(request.getDescription())
                 .imageUrl(request.getImageUrl())
                 .parent(parent)
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
 
-        Category savedCategory = categoryRepository.save(category);
-        return toDTO(savedCategory);
+        return toDTO(categoryRepository.save(category));
     }
 
     @Override
@@ -78,11 +156,17 @@ public class CategoryServiceImpl implements CategoryService {
                 case "id_desc":
                     sort = Sort.by(Sort.Direction.DESC, "id");
                     break;
+                default:
+                    break;
             }
         }
 
         Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, size, sort);
-        Page<Category> categories = categoryRepository.findCategories(search, parentId, isActive, pageable);
+        Page<Category> categories = categoryRepository.findCategories(
+                (search != null && search.isBlank()) ? null : search,
+                parentId,
+                isActive,
+                pageable);
         return categories.map(this::toDTO);
     }
 
@@ -92,18 +176,27 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
 
-        if (request.getSlug() != null && !request.getSlug().equals(category.getSlug())) {
-            if (categoryRepository.existsBySlugAndIdNot(request.getSlug(), id)) {
-                throw new RuntimeException("Đường dẫn thân thiện (slug) của danh mục đã tồn tại");
-            }
-            category.setSlug(request.getSlug());
-        }
-
-        if (request.getName() != null && !request.getName().equals(category.getName())) {
+        // Cập nhật tên
+        if (request.getName() != null && !request.getName().isBlank()
+                && !request.getName().equals(category.getName())) {
             if (categoryRepository.existsByNameAndIdNot(request.getName(), id)) {
                 throw new RuntimeException("Tên danh mục đã tồn tại");
             }
             category.setName(request.getName());
+        }
+
+        // Cập nhật slug (hoặc tự sinh lại từ tên mới)
+        if (request.getSlug() != null && !request.getSlug().isBlank()) {
+            if (!request.getSlug().equals(category.getSlug())) {
+                if (categoryRepository.existsBySlugAndIdNot(request.getSlug(), id)) {
+                    throw new RuntimeException("Đường dẫn thân thiện (slug) của danh mục đã tồn tại");
+                }
+                category.setSlug(request.getSlug());
+            }
+        } else if (request.getName() != null && !request.getName().equals(category.getName())) {
+            // Nếu tên thay đổi mà không gửi slug → tự sinh slug mới
+            String newSlug = ensureUniqueSlug(generateSlug(request.getName()), id);
+            category.setSlug(newSlug);
         }
 
         if (request.getDescription() != null) {
@@ -114,9 +207,15 @@ public class CategoryServiceImpl implements CategoryService {
             category.setImageUrl(request.getImageUrl());
         }
 
+        // Cập nhật parent + kiểm tra vòng lặp
         if (request.getParentId() != null) {
             if (request.getParentId() == -1L) {
+                // Giá trị -1 = xóa parent (thành root category)
                 category.setParent(null);
+            } else if (request.getParentId().equals(id)) {
+                throw new RuntimeException("Danh mục không thể là cha của chính nó");
+            } else if (wouldCreateCycle(id, request.getParentId())) {
+                throw new RuntimeException("Không thể tạo vòng lặp phân cấp: danh mục cha đã là con của danh mục hiện tại");
             } else {
                 Category parent = categoryRepository.findById(request.getParentId())
                         .orElseThrow(() -> new RuntimeException("Danh mục cha không tồn tại"));
@@ -128,8 +227,7 @@ public class CategoryServiceImpl implements CategoryService {
             category.setActive(request.getIsActive());
         }
 
-        Category updatedCategory = categoryRepository.save(category);
-        return toDTO(updatedCategory);
+        return toDTO(categoryRepository.save(category));
     }
 
     @Override
@@ -137,6 +235,30 @@ public class CategoryServiceImpl implements CategoryService {
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
+
+        // Kiểm tra có category con không
+        if (category.getChildren() != null && !category.getChildren().isEmpty()) {
+            throw new RuntimeException(
+                    "Không thể xóa danh mục đang có " + category.getChildren().size()
+                    + " danh mục con. Vui lòng xóa hoặc chuyển danh mục con trước, hoặc sử dụng chức năng Ẩn thay vì xóa.");
+        }
+
+        // Kiểm tra có sản phẩm không
+        if (category.getProducts() != null && !category.getProducts().isEmpty()) {
+            throw new RuntimeException(
+                    "Không thể xóa danh mục đang chứa " + category.getProducts().size()
+                    + " sản phẩm. Vui lòng chuyển các sản phẩm sang danh mục khác trước, hoặc sử dụng chức năng Ẩn thay vì xóa.");
+        }
+
         categoryRepository.delete(category);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryResponseDTO> getSimpleCategories() {
+        return categoryRepository.findByIsActiveTrueOrderByNameAsc()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 }
