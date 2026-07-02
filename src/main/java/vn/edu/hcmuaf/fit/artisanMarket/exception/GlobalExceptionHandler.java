@@ -9,6 +9,13 @@ import vn.edu.hcmuaf.fit.artisanMarket.common.ApiResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ProductNotPurchasedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProductNotPurchased(ProductNotPurchasedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity
@@ -23,3 +30,4 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Có lỗi xảy ra trên hệ thống: " + ex.getMessage()));
     }
 }
+

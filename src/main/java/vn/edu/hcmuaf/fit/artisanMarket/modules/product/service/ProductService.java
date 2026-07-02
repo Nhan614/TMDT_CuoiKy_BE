@@ -8,7 +8,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.enums.ProductStatus
 
 public interface ProductService {
     ProductResponseDTO getProductById(Long id);
-    Page<ProductResponseDTO> getAllProducts(int page, int size, String search, Long categoryId, Boolean isActive, String sortBy);
+    Page<ProductResponseDTO> getAllProducts(int page, int size, String search, Long categoryId, java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice, Boolean isActive, String sortBy);
 
     // Artisan quản lý sản phẩm của mình
     Page<ProductResponseDTO> getMyProducts(Long artisanId, Pageable pageable);

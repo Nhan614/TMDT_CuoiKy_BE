@@ -22,6 +22,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.repository.UserReposi
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.model.Artisan;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.artisan.repository.ArtisanRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -49,9 +50,11 @@ public class ProductController {
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean isActive,
             @RequestParam(required = false, defaultValue = "newest") String sortBy) {
-        Page<ProductResponseDTO> products = productService.getAllProducts(page, size, search, categoryId, isActive,
+        Page<ProductResponseDTO> products = productService.getAllProducts(page, size, search, categoryId, minPrice, maxPrice, isActive,
                 sortBy);
         return ResponseEntity.ok(ApiResponse.success(products,"Lấy danh sách sản phẩm thành công"));
     }

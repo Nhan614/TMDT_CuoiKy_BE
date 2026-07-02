@@ -5,11 +5,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.edu.hcmuaf.fit.artisanMarket.exception.ProductNotPurchasedException;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.domain.entity.Comment;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.domain.repository.CommentRepository;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentEligibilityDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.service.CommentService;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.order.domain.entity.enums.PaymentStatus;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.order.domain.repository.OrderItemRepository;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.product.model.Product;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.user.domain.entity.User;
@@ -26,6 +30,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Override
     @Transactional
@@ -44,15 +49,19 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
         if (commentRepository.existsByProductIdAndUserId(productId, user.getId())) {
-            throw new RuntimeException("Bạn đã bình luận sản phẩm này rồi");
+            throw new RuntimeException("Bạn đã đánh giá sản phẩm này rồi");
         }
 
         boolean isPurchased = checkIfUserPurchasedProduct(user.getId(), productId);
+        if (!isPurchased) {
+            throw new ProductNotPurchasedException(
+                    "Bạn cần mua và thanh toán sản phẩm này trước khi có thể đánh giá");
+        }
 
         Comment comment = Comment.builder()
                 .content(request.getContent().trim())
                 .rating(request.getRating())
-                .isPurchased(isPurchased)
+                .isPurchased(true)
                 .product(product)
                 .user(user)
                 .build();
@@ -102,6 +111,23 @@ public class CommentServiceImpl implements CommentService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CommentEligibilityDTO checkEligibility(String username, Long productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new RuntimeException("Sản phẩm không tồn tại");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        boolean hasPurchased = checkIfUserPurchasedProduct(user.getId(), productId);
+        boolean hasReviewed = commentRepository.existsByProductIdAndUserId(productId, user.getId());
+        boolean canReview = hasPurchased && !hasReviewed;
+
+        return new CommentEligibilityDTO(hasPurchased, hasReviewed, canReview);
+    }
+
     private void updateProductAverageRating(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
@@ -111,7 +137,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private boolean checkIfUserPurchasedProduct(Long userId, Long productId) {
-        // Stub/mock logic since no order system exists yet
-        return false;
+        return orderItemRepository.existsPaidPurchaseByUserAndProduct(userId, productId, PaymentStatus.PAID);
     }
 }
+

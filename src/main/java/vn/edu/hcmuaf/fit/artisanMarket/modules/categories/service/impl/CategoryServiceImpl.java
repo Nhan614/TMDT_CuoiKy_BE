@@ -13,6 +13,7 @@ import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.dto.CategoryRequestDTO
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.dto.CategoryResponseDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.model.Category;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.categories.service.CategoryService;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.product.domain.repository.ProductRepository;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -24,11 +25,17 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     // ─── Helper: DTO ───────────────────────────────────────────────────────────
 
     private CategoryResponseDTO toDTO(Category category) {
-        return CategoryResponseDTO.fromEntity(category);
+        CategoryResponseDTO dto = CategoryResponseDTO.fromEntity(category);
+        if (dto != null) {
+            long count = productRepository.countActiveProductsByCategoryId(category.getId());
+            dto.setProductCount(count);
+        }
+        return dto;
     }
 
     // ─── Helper: Slug generation ────────────────────────────────────────────────

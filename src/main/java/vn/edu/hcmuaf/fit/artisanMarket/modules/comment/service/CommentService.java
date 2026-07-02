@@ -2,6 +2,7 @@ package vn.edu.hcmuaf.fit.artisanMarket.modules.comment.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentEligibilityDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentRequestDTO;
 import vn.edu.hcmuaf.fit.artisanMarket.modules.comment.dto.CommentResponseDTO;
 
@@ -12,4 +13,6 @@ public interface CommentService {
     Page<CommentResponseDTO> getCommentsByProduct(Long productId, Pageable pageable);
     void deleteComment(String username, Long commentId);
     List<CommentResponseDTO> getMyComments(String username);
+    CommentEligibilityDTO checkEligibility(String username, Long productId);
 }
+
