@@ -25,8 +25,23 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@RequestBody RegisterRequestDTO request) {
         authService.register(request);
-        return ResponseEntity.ok(ApiResponse.success("Đăng ký tài khoản thành công"));
+        return ResponseEntity.ok(ApiResponse.success(
+                "Đăng ký thành công. Vui lòng kiểm tra email để xác nhận tài khoản"
+        ));
     }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.ok(ApiResponse.success("Xác nhận email thành công. Bạn có thể đăng nhập ngay bây giờ"));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestBody ResendVerificationRequestDTO request) {
+        authService.resendVerificationEmail(request);
+        return ResponseEntity.ok(ApiResponse.success("Email xác nhận đã được gửi lại"));
+    }
+
 
     @PostMapping("/google")
     public ResponseEntity<ApiResponse<LoginResponseDTO>> googleLogin(@RequestBody GoogleAuthRequestDTO request) {

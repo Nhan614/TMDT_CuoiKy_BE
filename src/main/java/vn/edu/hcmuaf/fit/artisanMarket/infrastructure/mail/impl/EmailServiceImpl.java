@@ -51,4 +51,41 @@ public class EmailServiceImpl implements EmailService {
             log.error("Failed to send reset password email to {}: {}. Token/link has still been generated and printed above.", toEmail, e.getMessage());
         }
     }
+
+    @Override
+    public void sendVerificationEmail(String toEmail, String verifyLink) {
+        log.info("======== VERIFICATION EMAIL ========");
+        log.info("Send to: {}", toEmail);
+        log.info("Verify Link: {}", verifyLink);
+        log.info("=====================================");
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[Artisan Market] Xác nhận email đăng ký tài khoản");
+
+            String content = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;\">" +
+                    "<h2 style=\"color: #333333; text-align: center;\">Xác Nhận Email</h2>" +
+                    "<p>Xin chào,</p>" +
+                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại Artisan Market. Vui lòng bấm vào nút bên dưới để xác nhận địa chỉ email và kích hoạt tài khoản của bạn.</p>" +
+                    "<div style=\"text-align: center; margin: 30px 0;\">" +
+                    "<a href=\"" + verifyLink + "\" style=\"background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;\">Xác Nhận Email</a>" +
+                    "</div>" +
+                    "<p>Hoặc bạn có thể sao chép liên kết dưới đây vào trình duyệt của bạn:</p>" +
+                    "<p style=\"word-break: break-all; color: #1a0dab;\">" + verifyLink + "</p>" +
+                    "<p>Liên kết này có hiệu lực trong vòng 24 giờ. Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua email.</p>" +
+                    "<hr style=\"border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;\">" +
+                    "<p style=\"font-size: 12px; color: #999999; text-align: center;\">Artisan Market</p>" +
+                    "</div>";
+
+            helper.setText(content, true);
+            mailSender.send(message);
+            log.info("Verification email successfully sent to {}", toEmail);
+        } catch (Exception e) {
+            log.error("Gửi email xác nhận thất bại: {}", e.getMessage());
+            throw new RuntimeException("Không thể gửi email xác nhận, vui lòng thử lại sau");
+        }
+    }
 }
