@@ -10,4 +10,7 @@ public interface AuthRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     Optional<User> findByEmail(String email);
     Optional<User> findByResetPasswordToken(String token);
+
+    // === MỚI ===
+    Optional<User> findByVerificationToken(String token);
 }

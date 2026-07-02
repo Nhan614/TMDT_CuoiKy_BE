@@ -40,6 +40,17 @@ public class User {
     @Column(name = "reset_password_token_expiry")
     private LocalDateTime resetPasswordTokenExpiry;
 
+    // === MỚI: Xác thực email khi đăng ký ===
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    @Column(name = "verification_token")
+    private String verificationToken;
+
+    @Column(name = "verification_token_expiry")
+    private LocalDateTime verificationTokenExpiry;
+
     @Column(name = "balance", nullable = false, precision = 15, scale = 2, columnDefinition = "DECIMAL(15,2) DEFAULT 0.00")
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;

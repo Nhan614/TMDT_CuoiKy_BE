@@ -35,6 +35,9 @@ public class AuthServiceImpl implements AuthService {
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
+    @Value("${app.verify-email-url}")
+    private String verifyEmailUrl;
+
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtService jwtService;
@@ -55,6 +58,12 @@ public class AuthServiceImpl implements AuthService {
         // get user role
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        // === MỚI: chặn nếu email chưa xác thực ===
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác nhận trước khi đăng nhập");
+        }
+
         String role = user.getRole().name();
 
         // create token with role claim
@@ -74,7 +83,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Tên đăng nhập đã tồn tại");
         }
 
-        // Create new user
+        // Check email đã được sử dụng
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email đã được sử dụng");
+        }
+
+        String verificationToken = UUID.randomUUID().toString();
+
+        // Create new user - chưa xác thực email
         User newUser = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -83,10 +99,17 @@ public class AuthServiceImpl implements AuthService {
                 .phone(request.getPhone())
                 .role(UserRole.USER)
                 .status(UserStatus.ACTIVE)
+                .emailVerified(false)
+                .verificationToken(verificationToken)
+                .verificationTokenExpiry(LocalDateTime.now().plusHours(24))
                 .build();
 
         // Save user
         userRepository.save(newUser);
+
+        // Gửi email xác nhận
+        String verifyLink = verifyEmailUrl + "?token=" + verificationToken;
+        emailService.sendVerificationEmail(newUser.getEmail(), verifyLink);
     }
 
     @Override
@@ -116,6 +139,7 @@ public class AuthServiceImpl implements AuthService {
                                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                                 .role(UserRole.USER)
                                 .status(UserStatus.ACTIVE)
+                                .emailVerified(true)
                                 .build());
                 userRepository.save(user);
 
@@ -176,5 +200,43 @@ public class AuthServiceImpl implements AuthService {
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
+    }
+
+    @Override
+    public void verifyEmail(String token) {
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("Mã xác thực không hợp lệ"));
+
+        if (user.isEmailVerified()) {
+            return; // đã xác thực trước đó, không báo lỗi
+        }
+
+        if (user.getVerificationTokenExpiry() == null
+                || user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Mã xác thực đã hết hạn, vui lòng yêu cầu gửi lại email xác nhận");
+        }
+
+        user.setEmailVerified(true);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiry(null);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void resendVerificationEmail(ResendVerificationRequestDTO request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống"));
+
+        if (user.isEmailVerified()) {
+            throw new RuntimeException("Tài khoản đã được xác thực trước đó");
+        }
+
+        String verificationToken = UUID.randomUUID().toString();
+        user.setVerificationToken(verificationToken);
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+        userRepository.save(user);
+
+        String verifyLink = verifyEmailUrl + "?token=" + verificationToken;
+        emailService.sendVerificationEmail(user.getEmail(), verifyLink);
     }
 }
